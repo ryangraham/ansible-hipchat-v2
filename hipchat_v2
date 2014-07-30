@@ -1,0 +1,53 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
+DOCUMENTATION = '''
+---
+module: hipchat_v2
+author: Ryan Graham
+short_description: Notify hipchat using v2 api
+description:
+   - Notify hipchat using v2 api
+
+requirements: [ urllib2, json ]
+'''
+
+# ===========================================
+# Module execution.
+#
+
+import urllib2, json
+
+def main():
+
+    module = AnsibleModule(
+        argument_spec=dict(
+            token=dict(required=True),
+            room=dict(required=True),
+            msg=dict(required=True),
+            color=dict(default="yellow", choices=["yellow", "red", "green",
+                                                  "purple", "gray", "random"]),
+        ),
+        supports_check_mode=True
+    )
+
+    token = module.params["token"]
+    room = module.params["room"]
+    data = {}
+    data['color']   = module.params["color"]
+    data['message'] = module.params["msg"]
+    data['message_format'] = "text"
+    payload = json.dumps(data) 
+    url = "https://api.hipchat.com/v2/room/%s/notification?auth_token=%s" % (room, token)
+    headers = {'Content-Type': 'application/json'}
+
+    request = urllib2.Request(url, payload, {'Content-Type': 'application/json'})
+    response = urllib2.urlopen(request)
+
+    changed = True
+    module.exit_json(changed=changed, room=room)
+
+from ansible.module_utils.basic import *
+from ansible.module_utils.urls import *
+
+main()
